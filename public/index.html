@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CodePal</title>
+    <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+    <script
+            src="https://code.jquery.com/jquery-3.1.1.min.js"
+            integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+            crossorigin="anonymous"></script>
+    <script type='text/javascript' src='https://api.stackexchange.com/js/2.0/all.js'></script>
+
+</head>
+<p id="text">socket.io</p>
+</body>
+<script>
+    function getParameterByName(name, url) {
+        if (!url) {
+            url = window.location.href;
+        }
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+                results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+    $(document).ready(function(){
+
+
+
+        var socket  = new io();
+        var text        = $('#text');
+
+        socket.connect();
+
+        socket.on('connect', function () {
+            text.html('connected');
+        });
+
+        socket.on('message', function (msg) {
+            text.html(msg);
+        });
+
+        socket.on('disconnect', function () {
+            text.html('disconnected');
+        });
+
+        $('form').submit(function(){
+            socket.emit('message', 'hello');
+            text.html('sent!');
+            return false;
+        });
+
+        var fragment = location.hash;
+
+        if(fragment){
+            var token = getParameterByName('access_token',window.location.host+'?'+fragment.substring(1));
+            var expires = getParameterByName('expires',window.location.host+'?'+fragment.substring(1));
+            socket.emit('token', token);
+            localStorage.setItem('token', token);
+        }
+
+        // Attach click handler to login button
+        $('#login-button').click(function() {
+            window.location = 'https://stackexchange.com/oauth/dialog?client_id=8700&scope=no_expiry&'+
+                    'redirect_uri=http://localhost:3000';
+        });
+
+        $('#follow-button').click(function() {
+            socket.emit('follow', JSON.stringify({
+                follower: '1',
+                followee: '2',
+                token: localStorage.getItem('token')
+            }));
+            socket.emit('follow', JSON.stringify({
+                follower: '1',
+                followee: '3',
+                token: localStorage.getItem('token')
+            }));
+            socket.emit('follow', JSON.stringify({
+                follower: '2',
+                followee: '3',
+                token: localStorage.getItem('token')
+            }));
+        });
+
+        $('#unfollow-button').click(function() {
+            socket.emit('unfollow', JSON.stringify({
+                follower: '1',
+                followee: '2',
+                token: localStorage.getItem('token')
+            }));
+        });
+
+        $('#followers').click(function() {
+            socket.emit('followers', JSON.stringify({
+                user: '3',
+                token: localStorage.getItem('token')
+            }));
+        });
+
+        $('#followees').click(function() {
+            socket.emit('followees', JSON.stringify({
+                user: '1',
+                token: localStorage.getItem('token')
+            }));
+        });
+
+        $('#posts').click(function() {
+            socket.emit('posts', JSON.stringify({
+                user: '1',
+                token: localStorage.getItem('token')
+            }));
+        });
+
+        $('#Recommendations').click(function() {
+            socket.emit('getRecommendations', JSON.stringify({
+                user: '4999',
+                token: localStorage.getItem('token')
+            }));
+        });
+
+    });
+
+</script>
+<body>
+<ul id="messages"></ul>
+<form action="">
+
+    <button id="login-button">Login</button>
+
+    <button id="follow-button">Follow</button>
+
+    <button id="unfollow-button">Unfollow</button>
+
+    <button id="followers">Followers</button>
+
+    <button id="followees">Followees</button>
+
+    <button id="posts">Posts</button>
+
+    <button id="Recommendations">Recommendations</button>
+</form>
+
+</body>
+</html>
