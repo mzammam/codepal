@@ -37,10 +37,7 @@ module.exports.getRecommendations = getRecommendations;
 
 function InsertUsersTagsFromFolder( folder,db, callback) {
     fs.readdir(folder, function(err, data) {
-        // Each folder name represents a machine, so get the name and add the machine to
-        // the database.
         data.forEach(function (file) {
-            //Add a vehicle to the database, then parse sensor files
             InsertUsersTagsFromFile(db, folder+"\\"+file, function (res) {
                 callback(res);
             });
@@ -319,9 +316,18 @@ function getUsersDetailsByIndex(IdsList, callback) {
     });
 }
 
-function getUserInfoFromLocalDB(userId, callback) {
+function getUserInfoFromLocalDB(token, userId, callback) {
     getDB(function (db) {
         db.collection('Users').find({"Id": userId}).toArray(function (err, user) {
+            if(!user.token)
+            {
+                db.collection('Users').updateOne(
+                    { "Id": userId },
+                    {
+                        $set: { "token": token }
+                    }
+                )
+            }
             callback(user);
         });
     });
@@ -329,10 +335,11 @@ function getUserInfoFromLocalDB(userId, callback) {
 
 function getUserInfoFromStackExchange(token, callback) {
     var url = "me?order=desc&sort=creation&access_token="+token;
-    issueStackExchangeAPIRequest(url, function (user){
+    issueStackExchangeAPIRequest(token, url, function (user){
         //TODO check if the account id is there
         var account_id = user.items[0].account_id;
-        getUserInfoFromLocalDB(account_id, function (user) {
+        getUserInfoFromLocalDB(token, account_id, function (user) {
+            callback(user);
         });
     });
 }
