@@ -23,7 +23,7 @@ const server = http.createServer(app).listen(3000, function(err) {
     }
 
 
-});        
+});
 
 
 
@@ -44,8 +44,13 @@ socket.on('connection', function (client){
 
     client.on('token', function (token) {
         //Identify user
-        Helper.getUserInfoFromStackExchange(token, function (res) {
-            console.log(res);
+        Helper.getUserInfoFromStackExchange(token, function (user) {
+            console.log(user);
+            if(user) {
+                
+            } else {
+                
+            }
         });
     }) ;
 
@@ -106,7 +111,7 @@ socket.on('connection', function (client){
             console.log(res);
         });
     });
-});
+});  
 
 
 
